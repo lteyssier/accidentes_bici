@@ -1,0 +1,110 @@
+body {
+  margin: 0; 
+  font-family: sans-serif; 
+  width: 100vw; 
+  height: 100vh; 
+  overflow: hidden;
+}
+
+.container{
+  display: flex;
+  gap: 2rem;
+}
+
+
+
+.raceblock2{
+  position: relative;
+  width: 26rem;
+  height: 30rem;
+  margin-left: 1rem;
+  margin-top: 1rem;
+  z-index: 99;
+/* From https://css.glass */
+background: rgba(78, 86, 86, 0.39);
+border-radius: 16px;
+box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+backdrop-filter: blur(5.7px);
+-webkit-backdrop-filter: blur(5.7px);
+border: 1px solid rgba(79, 85, 85, 0.99);
+}
+
+.selectorT{
+  margin-left: 0.5rem;
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+  position: relative;
+}
+
+.selectorT select{
+  background-color:#262626;
+  padding: 0.5rem;
+  font-size: 1.5rem;
+  color: #e4e3e3;
+  font-weight: 700;
+  border-radius: 10px;
+  width: 25rem;
+}
+
+.container{
+  display: flex;
+  flex-direction: column;
+}
+
+.title{
+  color: aliceblue;
+  margin-left: 1rem;
+  margin-top: 1rem;
+  font-size: 1.8rem;
+}
+
+.raceInfo{
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.titles{
+  margin-left: 1rem;
+  color: aliceblue;
+  font-size: 1rem;
+}
+
+.raceResults{
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  padding-left: 1rem;
+  padding-top: 0;
+}
+
+.infoResult{
+  color: aliceblue;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.infoResult span{
+  font-weight: 700;
+}
+
+.infoQualy{
+  color: aliceblue;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.infoQualy span{
+  font-weight: 700;
+}
+
+.titleI{
+  font-weight: 500;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+}
