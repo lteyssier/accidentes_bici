@@ -3,10 +3,8 @@ import { Map } from 'react-map-gl';
 import maplibregl from 'maplibre-gl';
 import { AmbientLight, PointLight, LightingEffect } from '@deck.gl/core';
 import DeckGL from '@deck.gl/react';
-import { PolygonLayer, GeoJsonLayer } from '@deck.gl/layers';
+import { PolygonLayer } from '@deck.gl/layers';
 import { TripsLayer } from '@deck.gl/geo-layers';
-import { HeatmapLayer } from '@deck.gl/aggregation-layers';
-import cdmxBoundary from '../../public/cdmx_boundary.json'; // Asegúrate de tener este archivo
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
 
@@ -37,7 +35,7 @@ const landCover = [
   ]
 ];
 
-const Race = ({ data, initialViewState, showHeatmap, heatmapPoints }) => {
+const Race = ({ data, initialViewState }) => {
   const trailLength = 3000;
   const mapStyle = MAP_STYLE;
   const theme = DEFAULT_THEME;
@@ -65,40 +63,20 @@ const Race = ({ data, initialViewState, showHeatmap, heatmapPoints }) => {
       stroked: true,
       getFillColor: [0, 0, 0, 0]
     }),
-    new GeoJsonLayer({
-      id: 'cdmx-boundary',
-      data: cdmxBoundary,
-      stroked: true,
-      filled: false,
-      getLineColor: [255, 255, 255],
-      getLineWidth: 2,
-      lineWidthMinPixels: 2
-    }),
     new TripsLayer({
       id: 'trips',
       data: data,
       getPath: d => d.path,
       getTimestamps: d => d.timestamps,
-      getColor: d => [0, 255, 0],
-      getLineWidth: 1,
+      getColor: d => d.vendor === 1 ? theme.trailColor0 : theme.trailColor1,
       opacity: 0.8,
       widthMinPixels: 6,
       rounded: true,
       trailLength,
       currentTime: time,
       shadowEnabled: false
-    }),
-    showHeatmap &&
-      new HeatmapLayer({
-        id: 'heatmap-layer',
-        data: heatmapPoints,
-        getPosition: d => d.position,
-        getWeight: d => 1,
-        radiusPixels: 15,
-        intensity: .6,
-        threshold: 0.05
-      })
-  ].filter(Boolean); // elimina false si showHeatmap === false
+    })
+  ];
 
   return (
     <DeckGL
@@ -107,12 +85,7 @@ const Race = ({ data, initialViewState, showHeatmap, heatmapPoints }) => {
       initialViewState={initialViewState}
       controller={true}
     >
-      <Map
-        reuseMaps
-        mapLib={maplibregl}
-        mapStyle={mapStyle}
-        preventStyleDiffing={true}
-      />
+      <Map reuseMaps mapLib={maplibregl} mapStyle={mapStyle} preventStyleDiffing={true} />
     </DeckGL>
   );
 };
