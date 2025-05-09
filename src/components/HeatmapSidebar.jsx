@@ -105,7 +105,7 @@ export default function HeatmapSidebar({
       </h2>
 
       {/* selector Día / Semana / Mes */}
-      <label htmlFor="escala-select">Probabilidad próximo accidente:</label>
+      <label htmlFor="escala-select">Accidentes probables en:</label>
       <select
         id="escala-select"
         value={escala}
