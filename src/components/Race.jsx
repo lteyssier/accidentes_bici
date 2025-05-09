@@ -1,120 +1,125 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Map } from 'react-map-gl';
 import maplibregl from 'maplibre-gl';
-import { AmbientLight, PointLight, LightingEffect } from '@deck.gl/core';
 import DeckGL from '@deck.gl/react';
-import { PolygonLayer, GeoJsonLayer } from '@deck.gl/layers';
+import { GeoJsonLayer } from '@deck.gl/layers';
 import { TripsLayer } from '@deck.gl/geo-layers';
 import { HeatmapLayer } from '@deck.gl/aggregation-layers';
-import cdmxBoundary from '../../public/cdmx_boundary.json'; // Asegúrate de tener este archivo
+import {
+  AmbientLight,
+  PointLight,
+  LightingEffect
+} from '@deck.gl/core';
 
-const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
+const MAP_STYLE =
+  'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
-const ambientLight = new AmbientLight({ color: [255, 255, 255], intensity: 1.0 });
-const pointLight = new PointLight({ color: [255, 255, 255], intensity: 2.0, position: [-74.05, 40.7, 8000] });
-const lightingEffect = new LightingEffect({ ambientLight, pointLight });
-
-const material = {
-  ambient: 0.1,
-  diffuse: 0.6,
-  shininess: 32,
-  specularColor: [60, 64, 70]
-};
-
-const DEFAULT_THEME = {
-  trailColor0: [232, 209, 91],
-  trailColor1: [235, 24, 0],
-  material,
-  effects: [lightingEffect]
-};
-
-const landCover = [
-  [
-    [-123.0, 49.196],
-    [-123.0, 49.324],
-    [-123.306, 49.324],
-    [-123.306, 49.196]
-  ]
+/* Efectos de iluminación */
+const effects = [
+  new LightingEffect({
+    ambientLight: new AmbientLight({ intensity: 1 }),
+    pointLight1: new PointLight({
+      position: [-99.13, 19.43, 8000],
+      intensity: 2
+    })
+  })
 ];
 
-const Race = ({ data, initialViewState, showHeatmap, heatmapPoints }) => {
-  const trailLength = 3000;
-  const mapStyle = MAP_STYLE;
-  const theme = DEFAULT_THEME;
+export default function Race({
+  tripsData,
+  viewState,
+  onViewStateChange,
+  showHeatmap,
+  heatmapPoints,
+  onAlcaldiaClick,
+  selectedAlcaldia,
+  cdmxBoundary
+}) {
+  /* Animación para TripsLayer */
   const loopLength = 2550;
   const animationSpeed = 1;
-
   const [time, setTime] = useState(0);
-  const [animation] = useState({});
-
-  const animate = () => {
-    setTime(t => (t + animationSpeed) % loopLength);
-    animation.id = window.requestAnimationFrame(animate);
-  };
 
   useEffect(() => {
-    animation.id = window.requestAnimationFrame(animate);
-    return () => window.cancelAnimationFrame(animation.id);
-  }, [animation]);
+    const id = requestAnimationFrame(function animate() {
+      setTime(t => (t + animationSpeed) % loopLength);
+      requestAnimationFrame(animate);
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
 
-  const layers = [
-    new PolygonLayer({
-      id: 'ground',
-      data: landCover,
-      getPolygon: f => f,
-      stroked: true,
-      getFillColor: [0, 0, 0, 0]
-    }),
-    new GeoJsonLayer({
-      id: 'cdmx-boundary',
-      data: cdmxBoundary,
-      stroked: true,
-      filled: false,
-      getLineColor: [255, 255, 255],
-      getLineWidth: 2,
-      lineWidthMinPixels: 2
-    }),
-    new TripsLayer({
-      id: 'trips',
-      data: data,
-      getPath: d => d.path,
-      getTimestamps: d => d.timestamps,
-      getColor: d => [0, 255, 0],
-      getLineWidth: 1,
-      opacity: 0.8,
-      widthMinPixels: 6,
-      rounded: true,
-      trailLength,
-      currentTime: time,
-      shadowEnabled: false
-    }),
-    showHeatmap &&
-      new HeatmapLayer({
-        id: 'heatmap-layer',
-        data: heatmapPoints,
-        getPosition: d => d.position,
-        getWeight: d => 1,
-        radiusPixels: 15,
-        intensity: .6,
-        threshold: 0.05
-      })
-  ].filter(Boolean); // elimina false si showHeatmap === false
+  /* Capas estáticas */
+  const staticLayers = useMemo(() => {
+    return [
+      new GeoJsonLayer({
+        id: 'cdmx',
+        data: cdmxBoundary,
+        stroked: true,
+        filled: false,
+        getLineColor: [255, 255, 255],
+        getLineWidth: 2,
+        pickable: true,
+        onClick: info =>
+          info.object &&
+          onAlcaldiaClick(info.object, info.coordinate) 
+      }),
+      selectedAlcaldia &&
+        new GeoJsonLayer({
+          id: 'highlight',
+          data: selectedAlcaldia,
+          stroked: true,
+          filled: false,
+          getLineColor: [255, 255, 255],
+          lineWidthMinPixels: 4
+        }),
+      showHeatmap &&
+        new HeatmapLayer({
+          id: 'heat',
+          data: heatmapPoints,
+          getPosition: d => d.position,
+          radiusPixels: 15,
+          threshold: 0.07
+        })
+    ].filter(Boolean);
+  }, [
+    cdmxBoundary,
+    selectedAlcaldia,
+    showHeatmap,
+    heatmapPoints,
+    onAlcaldiaClick,
+    viewState.zoom
+  ]);
+
+  /* Capa animada */
+  const tripsLayer = useMemo(
+    () =>
+      new TripsLayer({
+        id: 'trips',
+        data: tripsData,
+        getPath: d => d.path,
+        getTimestamps: d => d.timestamps,
+        getColor: [0, 255, 255],
+        widthMinPixels: 2,
+        rounded: true,
+        trailLength: 3000,
+        currentTime: time
+      }),
+    [tripsData, time]
+  );
 
   return (
     <DeckGL
-      layers={layers}
-      effects={theme.effects}
-      initialViewState={initialViewState}
-      controller={true}
+      layers={[...staticLayers, tripsLayer]}
+      effects={effects}
+      viewState={viewState}
+      onViewStateChange={({ viewState: vs }) => onViewStateChange(vs)}
+      controller
     >
       <Map
         reuseMaps
         mapLib={maplibregl}
-        mapStyle={mapStyle}
-        preventStyleDiffing={true}
+        mapStyle={MAP_STYLE}
       />
     </DeckGL>
   );
-};
-
-export default Race;
+}
